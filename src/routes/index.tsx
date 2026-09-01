@@ -101,7 +101,8 @@ function HomePage() {
         <div className="mt-6">
           {latest ? (
             <div className="relative overflow-hidden rounded-[32px] gradient-primary p-6 text-primary-foreground shadow-raised">
-              <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+              <div className="absolute inset-0 opacity-[0.15] pointer-events-none" style={{ backgroundImage: "radial-gradient(circle, #ffffff 1.5px, transparent 1.5px)", backgroundSize: "16px 16px" }} />
+              <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10 blur-2xl pointer-events-none" />
               
               <div className="relative flex items-start justify-between">
                 <div className="flex items-center gap-3">
