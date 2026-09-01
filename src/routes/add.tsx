@@ -128,18 +128,18 @@ function AddPage() {
             </div>
             <h2 className="text-base font-bold text-foreground">Date & Time</h2>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <input
               type="date"
               value={form.reading_date}
               onChange={(e) => set("reading_date", e.target.value)}
-              className={inputClass}
+              className={`flex-1 min-w-0 ${inputClass}`}
             />
             <input
               type="time"
               value={form.reading_time}
               onChange={(e) => set("reading_time", e.target.value)}
-              className={inputClass}
+              className={`flex-1 min-w-0 ${inputClass}`}
             />
           </div>
         </div>
