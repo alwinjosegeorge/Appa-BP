@@ -80,6 +80,21 @@ export async function saveReading(input: ReadingInput, id?: string) {
   await saveReadingFn({ data: { id, input } });
 }
 
+export const saveSettingsFn = createServerFn({ method: "POST" })
+  .validator((d: { patient_name: string }) => d)
+  .handler(async ({ data: { patient_name } }) => {
+    const existing = await sql`SELECT id FROM app_settings LIMIT 1`;
+    if (existing.length > 0) {
+      await sql`UPDATE app_settings SET patient_name = ${patient_name} WHERE id = ${existing[0].id}`;
+    } else {
+      await sql`INSERT INTO app_settings (patient_name) VALUES (${patient_name})`;
+    }
+  });
+
+export async function saveSettings(input: { patient_name: string }) {
+  await saveSettingsFn({ data: input });
+}
+
 export async function deleteReading(id: string) {
   await deleteReadingFn({ data: id });
 }
