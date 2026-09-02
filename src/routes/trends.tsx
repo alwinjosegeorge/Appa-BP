@@ -13,7 +13,7 @@ import {
   Legend,
 } from "recharts";
 import { AppShell, Disclaimer, PageHeader } from "@/components/AppShell";
-import { readingsQuery, daysAgoISO, type Reading } from "@/lib/bp";
+import { readingsQuery, daysAgoISO, todayISO, type Reading } from "@/lib/bp";
 
 export const Route = createFileRoute("/trends")({
   head: () => ({
@@ -30,6 +30,7 @@ export const Route = createFileRoute("/trends")({
 });
 
 const RANGES = [
+  { key: "1", label: "Today" },
   { key: "7", label: "7 Days" },
   { key: "30", label: "30 Days" },
   { key: "all", label: "All Time" },
@@ -38,6 +39,35 @@ const RANGES = [
 function avg(nums: number[]) {
   if (!nums.length) return null;
   return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
+}
+
+function buildToday(readings: Reading[]) {
+  const today = todayISO();
+  const filtered = readings.filter((r) => r.reading_date === today);
+
+  return filtered
+    .sort((a, b) => (a.reading_time < b.reading_time ? -1 : 1))
+    .map((r) => {
+      const sysAll = [r.right_systolic, r.left_systolic].filter((v): v is number => v != null);
+      const diaAll = [r.right_diastolic, r.left_diastolic].filter((v): v is number => v != null);
+
+      let timeLabel = r.reading_time;
+      try {
+        const [h, m] = r.reading_time.split(":");
+        const d = new Date();
+        d.setHours(Number(h), Number(m));
+        timeLabel = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+      } catch (e) {}
+
+      return {
+        date: r.reading_date,
+        label: timeLabel,
+        systolic: avg(sysAll),
+        diastolic: avg(diaAll),
+        rightSys: r.right_systolic ?? null,
+        leftSys: r.left_systolic ?? null,
+      };
+    });
 }
 
 function buildDaily(readings: Reading[]) {
@@ -77,6 +107,9 @@ function TrendsPage() {
   const [range, setRange] = useState<(typeof RANGES)[number]["key"]>("7");
 
   const data = useMemo(() => {
+    if (range === "1") {
+      return buildToday(readings);
+    }
     const cutoff = range === "all" ? null : daysAgoISO(Number(range) - 1);
     const filtered = cutoff ? readings.filter((r) => r.reading_date >= cutoff) : readings;
     return buildDaily(filtered);
@@ -86,7 +119,9 @@ function TrendsPage() {
     <AppShell>
       <PageHeader eyebrow="Overview" title="BP" accent="Trends">
         <p className="mt-2 text-sm text-muted-foreground">
-          Daily averages of the readings you recorded.
+          {range === "1" 
+            ? "Your readings recorded throughout today."
+            : "Daily averages of the readings you recorded."}
         </p>
       </PageHeader>
 
@@ -116,7 +151,11 @@ function TrendsPage() {
           </div>
         ) : (
           <>
-            <ChartCard title="Systolic & Diastolic" subtitle="Average per day (mmHg)" icon={TrendingUp}>
+            <ChartCard 
+              title="Systolic & Diastolic" 
+              subtitle={range === "1" ? "Individual readings (mmHg)" : "Average per day (mmHg)"} 
+              icon={TrendingUp}
+            >
               <LineChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="label" tick={{ fontSize: 11, fontWeight: 600, fill: "var(--color-muted-foreground)" }} tickLine={false} axisLine={false} />
@@ -146,7 +185,11 @@ function TrendsPage() {
               </LineChart>
             </ChartCard>
 
-            <ChartCard title="Right vs Left Arm" subtitle="Systolic average per day (mmHg)" icon={Activity}>
+            <ChartCard 
+              title="Right vs Left Arm" 
+              subtitle={range === "1" ? "Systolic readings (mmHg)" : "Systolic average per day (mmHg)"} 
+              icon={Activity}
+            >
               <LineChart data={data} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis dataKey="label" tick={{ fontSize: 11, fontWeight: 600, fill: "var(--color-muted-foreground)" }} tickLine={false} axisLine={false} />
