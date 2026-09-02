@@ -38,9 +38,6 @@ function ProfilePage() {
       setIsExporting(true);
       toast.loading("Generating report...", { id: "export" });
       
-      // Need a small delay to ensure the hidden element is fully rendered if we unhide it
-      reportRef.current.style.display = "block";
-      
       // Wait for fonts/styles to apply
       await new Promise(r => setTimeout(r, 100));
       
@@ -50,14 +47,11 @@ function ProfilePage() {
         backgroundColor: '#ffffff'
       });
       
-      reportRef.current.style.display = "none";
-      
       download(dataUrl, `BP_Report_${new Date().toISOString().split('T')[0]}.png`);
       toast.success("Report downloaded successfully!", { id: "export" });
     } catch (err) {
       console.error(err);
       toast.error("Failed to generate report", { id: "export" });
-      if (reportRef.current) reportRef.current.style.display = "none";
     } finally {
       setIsExporting(false);
     }
@@ -130,7 +124,7 @@ function ProfilePage() {
       {/* Hidden Report Template for export */}
       <div 
         ref={reportRef} 
-        style={{ position: 'fixed', top: '-9999px', left: '-9999px', display: 'none', width: '800px', padding: '40px', background: 'white', color: '#111' }}
+        style={{ position: 'absolute', top: '-9999px', left: '-9999px', zIndex: -1, width: '800px', padding: '40px', background: 'white', color: '#111' }}
         className="font-sans"
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid #f3f4f6', paddingBottom: '20px', marginBottom: '30px' }}>
@@ -150,15 +144,13 @@ function ProfilePage() {
               <Activity size={20} color="#e11d48" /> Blood Pressure Trend
             </h2>
             <div style={{ height: '250px', width: '100%' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                  <XAxis dataKey="date" tick={{fontSize: 12}} tickLine={false} axisLine={false} />
-                  <YAxis tick={{fontSize: 12}} tickLine={false} axisLine={false} />
-                  <Line type="monotone" dataKey="sys" name="Systolic" stroke="#e11d48" strokeWidth={3} dot={{r:3}} />
-                  <Line type="monotone" dataKey="dia" name="Diastolic" stroke="#881337" strokeWidth={3} dot={{r:3}} />
-                </LineChart>
-              </ResponsiveContainer>
+              <LineChart width={720} height={250} data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                <XAxis dataKey="date" tick={{fontSize: 12}} tickLine={false} axisLine={false} />
+                <YAxis tick={{fontSize: 12}} tickLine={false} axisLine={false} />
+                <Line type="monotone" dataKey="sys" name="Systolic" stroke="#e11d48" strokeWidth={3} dot={{r:3}} isAnimationActive={false} />
+                <Line type="monotone" dataKey="dia" name="Diastolic" stroke="#881337" strokeWidth={3} dot={{r:3}} isAnimationActive={false} />
+              </LineChart>
             </div>
           </div>
         )}
